@@ -1,0 +1,46 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	implementation 'net.java.dev.jna:jna:5.10.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+version = '0.1'
+mainClassName = 'hitonoriol.stressstrain.Analyzer'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+task makeNativeLib(type: Exec) {
+	workingDir "$projectDir/core-lib"
+	commandLine 'make'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task dist(type: Jar) {
+	archivesBaseName = 'Stress Strain State Analyzer'
+	manifest {
+		attributes 	'Main-Class': mainClassName,
+					'Implementation-Title': archivesBaseName,
+					'Implementation-Version': version
+	}
+	
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+	from {
+		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+
+	with jar
+}

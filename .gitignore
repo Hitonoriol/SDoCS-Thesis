@@ -7,3 +7,14 @@ zo
 stress-strain
 info.jpg
 ss-initial
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+.classpath
+.project
+.settings
+bin
+*.dll

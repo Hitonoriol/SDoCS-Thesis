@@ -1,24 +1,13 @@
-! ------------- Test input -----------------
-      program stress_strain
-      external calculate
-      integer :: n,usl1,usl2
-      real :: q1,q2,kpi
-      read(5,*) n,q1,q2,kpi,usl1,usl2
-      
-      call calculate(n,q1,q2,kpi,usl1,usl2)
-      end
-! ------------------------------------------
-
 !
 !           РАСЧЕТ НДС ПРЯМОУГОЛЬНОЙ ПЛАСТИНЫ
 !              С ЦИЛИНДРИЧЕСКИМИ ГОФРАМИ
 !
 
-      subroutine calculate(n, q1, q2, kpi, usl1, usl2) !bind(C,name='calcStressStrainState')
+      subroutine calc_stress_strain_state(n, q1, q2, kpi, usl1, usl2) bind(C,name='calcStressStrainState')
+            USE, INTRINSIC :: ISO_C_BINDING
             character (*), parameter :: NAME = 'stress-strain'
-
-            integer, intent(in) :: n,usl1,usl2
-            real, intent(in) :: q1,q2,kpi
+            integer(C_INT), VALUE, intent(in) :: n,usl1,usl2
+            real(C_FLOAT), VALUE, intent(in) :: q1,q2,kpi
 
             integer m1, ii, zn, l, i, j, k, m, kl, m2, kl1, kl2, kl3, k1
             real x, aa, dlna
@@ -55,7 +44,7 @@
             allocate(a(AC, AC))
             allocate(c(AC, AC))
 
-            write(6,*) 'КОЛ-ВО СЕКЦИЙ: ',n
+            write(*,*) 'n: ',n
             h=1.
             aa=50.
             
@@ -68,13 +57,12 @@
             allocate(qs(n, QC))
             allocate(ny(n, QC))
             
-            write(6,*) 'ИНТЕНСИВНОСТЬ ВНЕШНЕЙ НОРМАЛЬНОЙ '
-            write(6,*) 'НАГРУЗКИ НА ЧЕТНОЙ И НЕЧЕТНОЙ ОБОЛОЧКЕ: ',q1,', ',q2
+            write(*,*) 'q1, q2: ',q1,', ',q2
             do 2 i=1,n,2
 2           q(i)=q1
             do 22 i=2,n,2
 22          q(i)=q2
-            write(6,*) 'КОЭФФИЦИЕНТ НА КОТОРЫЙ ДЕЛИТСЯ УГОЛ PI: ',kpi
+            write(*,*) 'kpi: ',kpi
             do 3 i=1,n
             e(i)=200.
 3           b(i)=0.25
@@ -97,7 +85,7 @@
             qs(i,j)=0.
 11          ny(i,j)=0.
 
-            write(6,*) ' СИММЕТРИЯ СЛЕВА [0/1]: ',usl1
+            write(*,*) 'usl1 [0/1]: ',usl1
             if(usl1.eq.1) goto 3001
 
             x=-aa*3.14/kpi
@@ -266,7 +254,7 @@
             m=m+1
             goto 1002
 
-1001        write(6,*) ' СИММЕТРИЯ СПРАВА [0/1]: ',usl2
+1001        write(*,*) 'usl2 [0/1]: ',usl2
             if(usl2.eq.1) goto 3002
 
             x=-aa*3.14/kpi
@@ -436,7 +424,7 @@
             write(40,*)'-------------------------------------------------------------------------------------'
 400         format(a2,f5.1,a1,6(f12.6,a1))
             close(unit=40)
-            write(*,*) 'Done writing to .dat file'
+            write(*,*) '* Done writing to .dat file'
 
             open(unit=41,file=NAME//'.bias')
             m1=1
@@ -578,7 +566,7 @@
             r=1.
             do 50 l=1,n
 50          r=r*a(l,l)
-            write(6,*) 'opr = ',fleft(r)
+            write(*,*) 'opr = ',fleft(r)
             return
       end
 
