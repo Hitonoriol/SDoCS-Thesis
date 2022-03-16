@@ -1,0 +1,22 @@
+{
+	"FILE" : "File",
+	"OPEN_REPORT" : "Open report",
+	"QUIT" : "Quit",
+	"HELP" : "Help",
+	"ABOUT" : "About",
+
+	"INPUT_TITLE" : "Plate parameters",
+
+	"N_DESC" : "Segment count",
+	"Q_DESC" : "External normal load intensity for even (q1) / odd (q2) shell",
+	"KPI_DESC" : "π angle divisor",
+	"USL_DESC" : "Plate symmetry",
+	"USL1_DESC" : "Left symmetry",
+	"USL2_DESC" : "Right symmetry",
+	
+	"CALC_TEXT" : "Calculate",
+	
+	"REPORT" : "Report",
+	"PLOT" : "Plot of the compound structure before (Zo) and after (dZo) the deformation",
+	"SAVE_TEXT" : "Save report"
+}

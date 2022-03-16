@@ -1,4 +1,4 @@
-Label, CheckBox, TitledPane {
+Label, CheckBox, TitledPane, MenuBar, Button {
 	-fx-font-size: 14;
 }
 
