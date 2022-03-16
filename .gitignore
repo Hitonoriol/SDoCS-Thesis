@@ -18,3 +18,4 @@ build
 .settings
 bin
 *.dll
+*.mod

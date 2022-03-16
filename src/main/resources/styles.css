@@ -1,0 +1,12 @@
+Label, CheckBox, TitledPane {
+	-fx-font-size: 14;
+}
+
+.section {
+	-fx-padding: 5 0 0 15
+}
+
+.fill_parent {
+	-fx-max-width: 100%;
+	-fx-pref-width: 100%;
+}
