@@ -3,39 +3,63 @@
 !              С ЦИЛИНДРИЧЕСКИМИ ГОФРАМИ
 !
 
+      module analyzer
+      USE, INTRINSIC :: ISO_C_BINDING
+      
+      ! Data for visualization (`zo` & `dzo`)
+      integer(C_INT) :: XYC
+      real(C_FLOAT), dimension(:), allocatable, target :: xx, yy, xxx, yyy
+      
+      contains
+      
+      function get_xx() bind(C,name='getZOXPtr')
+            type(C_PTR) :: get_xx
+            get_xx = c_loc(xx)
+      end function
+      
+      function get_yy() bind(C,name='getZOYPtr')
+            type(C_PTR) :: get_yy
+            get_yy = c_loc(yy)
+      end function
+      
+      function get_xxx() bind(C,name='getDZOXPtr')
+            type(C_PTR) :: get_xxx
+            get_xxx = c_loc(xxx)
+      end function
+      
+      function get_yyy() bind(C,name='getDZOYPtr')
+            type(C_PTR) :: get_yyy
+            get_yyy = c_loc(yyy)
+      end function
+      
+      function get_plot_points() bind(C,name='getPlotPoints')
+            integer(C_INT) :: get_plot_points
+            get_plot_points = XYC
+      end function
+      
       subroutine calc_stress_strain_state(n, q1, q2, kpi, usl1, usl2) bind(C,name='calcStressStrainState')
             USE, INTRINSIC :: ISO_C_BINDING
             character (*), parameter :: NAME = 'stress-strain'
-            integer(C_INT), VALUE, intent(in) :: n,usl1,usl2
-            real(C_FLOAT), VALUE, intent(in) :: q1,q2,kpi
+            integer(C_INT), VALUE, intent(in) :: n, usl1, usl2
+            real(C_FLOAT), VALUE, intent(in) :: q1, q2, kpi
 
             integer m1, ii, zn, l, i, j, k, m, kl, m2, kl1, kl2, kl3, k1
             real x, aa, dlna
             real r, kzd, xzd, yzd
-            real alf(30,6)
 
-!            real, dimension(1000) :: xx, yy, xxx, yyy
-!            real, dimension(200) :: b1,c1,g
-!            real, dimension(200,200) :: a,c
-            
+            real, dimension(:,:), allocatable :: alf
             real, dimension(:,:), allocatable :: w, w1, u, mom, qs, ny
             real, dimension(:), allocatable :: f, q, qq, e, b
-            real, dimension(:), allocatable :: xx, yy, xxx, yyy
-            real, dimension(:), allocatable :: b1,c1,g
-            real, dimension(:,:), allocatable :: a,c
-            integer :: XYC, AC, QC
+            real, dimension(:), allocatable :: b1, c1, g
+            real, dimension(:,:), allocatable :: a, c
+            integer :: AC, QC
             
             allocate(f(n))
             allocate(q(n))
             allocate(qq(n))
             allocate(e(n))
             allocate(b(n))
-            
-            XYC = 1000
-            allocate(xx(XYC))
-            allocate(yy(XYC))
-            allocate(xxx(XYC))
-            allocate(yyy(XYC))
+            allocate(alf(n, 6))
             
             AC = n * 6
             allocate(b1(AC))
@@ -444,6 +468,36 @@
             write(41,*)      '--------------------------------------------------------------------'
             close(unit=41)
 
+! Calculate plot point count
+            i=1
+            k1=0
+            m1=1
+            r=aa
+            fi=-3.14/kpi
+            kzd=1.
+            yzd=aa*cos(3.14/kpi)
+            xzd=aa*(1.-sin(3.14/kpi))
+9956        fi=fi+10./aa
+            i=i+1
+            if(fi.le.3.14/kpi) goto 9956
+            k1=k1+2
+            kzd=kzd+2.
+            fi=-3.14/kpi
+9966        fi=fi+10./aa
+            i=i+1
+            if(fi.le.3.14/kpi) goto 9966
+            kzd=kzd+2.
+            fi=-3.14/kpi
+            k1=k1+2
+            m1=m1+2
+            if(m1.le.n) goto 9956
+            XYC = i
+            write(*,*) '* Allocating ', XYC, ' plot points...'
+            allocate(xx(XYC))
+            allocate(yy(XYC))
+            allocate(xxx(XYC))
+            allocate(yyy(XYC))
+
             open(unit=16,file='zo')
             i=1
             k1=0
@@ -511,18 +565,38 @@
             if(m1.le.n) goto 57
             close(unit=17)
             
+            write(*,*) 'Finished all calculations, deallocating dynamic stuff...'
+            
             deallocate(b1)
             deallocate(c1)
             deallocate(g)
             deallocate(a)
             deallocate(c)
+            deallocate(w)
+            deallocate(w1)
+            deallocate(u)
+            deallocate(mom)
+            deallocate(qs)
+            deallocate(ny)
+            deallocate(f)
+            deallocate(q)
+            deallocate(qq)
+            deallocate(e)
+            deallocate(b)
+            deallocate(alf)
             
+            write(*,*) 'Done!'
             return
       end
 
-      subroutine gauss(n,a,b,x,c,g)
+      function fleft(num)
+            real :: num
             character(25) :: fleft
+            write(fleft, '(F25.8)') num
+            fleft = adjustl(fleft)
+      end
 
+      subroutine gauss(n,a,b,x,c,g)
             real, dimension(n, n) :: a, c
             real, dimension(n) :: b, x, g
             real v,s
@@ -569,10 +643,12 @@
             write(*,*) 'opr = ',fleft(r)
             return
       end
-
-      function fleft(num)
-            real :: num
-            character(25) :: fleft
-            write(fleft, '(F25.8)') num
-            fleft = adjustl(fleft)
+      
+      subroutine dispose()
+            deallocate(xx)
+            deallocate(yy)
+            deallocate(xxx)
+            deallocate(yyy)
+      return
+      end
       end
