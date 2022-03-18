@@ -30,10 +30,12 @@
       ARRAY :: b1, c1, g
       MATRIX :: a, c
       
-      ! Bias arrays `n`x`AC`
+      ! Bias arrays `n`x`WC`
+      integer(C_INT) :: WC
       MATRIX :: w, w1, u, mom, qs, ny
       
       ! `n`x`n`
+      integer(C_INT) :: QC
       MATRIX :: alf
       ARRAY :: f, q, qq, e, b
       
@@ -74,14 +76,15 @@
               call dispose()
             end if
             
-            allocate(f(n))
-            allocate(q(n))
-            allocate(qq(n))
-            allocate(e(n))
-            allocate(b(n))
+            QC = max(30, n)
+            allocate(f(QC))
+            allocate(q(QC))
+            allocate(qq(QC))
+            allocate(e(QC))
+            allocate(b(QC))
             allocate(alf(n, 6))
             
-            AC = n * 6
+            AC = max(12, n * 6)
             allocate(b1(AC))
             allocate(c1(AC))
             allocate(g(AC))
@@ -93,13 +96,14 @@
             aa=50.
             write(*,*) 'q1, q2: ',q1,', ',q2
 
-            write(*,*) 'Allocating bias arrays [',n,',',AC,']'
-            allocate(w(n, AC))
-            allocate(w1(n, AC))
-            allocate(u(n, AC))
-            allocate(mom(n, AC))
-            allocate(qs(n, AC))
-            allocate(ny(n, AC))
+            WC = max(30, AC)
+            write(*,*) 'Allocating bias arrays [',n,',',WC,']'
+            allocate(w(WC, WC))
+            allocate(w1(WC, WC))
+            allocate(u(WC, WC))
+            allocate(mom(WC, WC))
+            allocate(qs(WC, WC))
+            allocate(ny(WC, WC))
             
             do 2 i=1,n,2
 2           q(i)=q1
@@ -362,6 +366,7 @@
 90          format(a2,i2,a1,i2,a2,f20.5)
 91          format(a2,i2,a2,f20.5)
             close(unit=9)
+            write(*,*) 'Calling `gauss` with n = ', k
             call gauss(k,a,b1,c1,c,g)
 
             write(*,*) 'm=', m
@@ -416,7 +421,8 @@
             if(x.le.(aa*3.14/kpi)) goto 451
             x=aa*3.14/kpi
             i=kl
-            write(40,400)' |',x,'|',u(m1,i),'|',w(m1,i),'|',w1(m1,i),'|',ny(m1,i),'|',mom(m1,i),'|',qs(m1,i),'|'
+            if (i .gt. 0) write(40,400)' |',x,'|',u(m1,i),'|',w(m1,i),'|',w1(m1,i),'|',ny(m1,i),'|',mom(m1,i),'|',qs(m1,i),'|'
+            i = max(1, i)
 
 !           Вычисление погрешностей
             alp1=abs(u(m1,i))
@@ -446,8 +452,9 @@
             kl=kl3
             if(usl2.eq.1.and.m2.eq.n) kl=kl2
             ii=kl
+            write(*,*) 'kl2=', kl2, 'kl3=', kl3, 'kl=', kl
             write(40,*) ' '
-452         write(40,400)' |',x,'|',u(m2,ii),'|',w(m2,ii),'|',w1(m2,ii),'|',ny(m2,ii),'|',mom(m2,ii),'|',qs(m2,ii),'|'
+452         if (ii .gt. 0) write(40,400)' |',x,'|',u(m2,ii),'|',w(m2,ii),'|',w1(m2,ii),'|',ny(m2,ii),'|',mom(m2,ii),'|',qs(m2,ii),'|'
             x=x-30.
             ii=ii-3
             dlna=-aa*3.14/kpi
@@ -516,6 +523,10 @@
             allocate(yy(XYC))
             allocate(xxx(XYC))
             allocate(yyy(XYC))
+            call fill(xx, 0)
+            call fill(yy, 0)
+            call fill(xxx, 0)
+            call fill(yyy, 0)
 
             open(unit=16,file='zo')
             i=1
@@ -568,13 +579,18 @@
             kzd=kzd+2.
             fi=-3.14/kpi
             ii=kl
-67          xxx(i)=k1*r+r+(r+w(m2,ii))*sin(fi-u(m2,ii)/r)-kzd*xzd
-            yyy(i)=-(r+w(m2,ii))*cos(fi-u(m2,ii)/r)+yzd
+67          if (ii .gt. 0) then
+              xxx(i)=k1*r+r+(r+w(m2,ii))*sin(fi-u(m2,ii)/r)-kzd*xzd
+              yyy(i)=-(r+w(m2,ii))*cos(fi-u(m2,ii)/r)+yzd
+            else
+              xxx(i) = 0
+              yyy(i) = 0
+            end if
             write(17,*) xxx(i),yyy(i)
             fi=fi+10./aa
             i=i+1
             ii=ii-1
-            if(fi.le.3.14/kpi) goto 67
+            if((fi.le.3.14/kpi) .and. (ii.gt.0)) goto 67 ! check `ii>0` to avoid crashes
             ii=1
             kzd=kzd+2.
             fi=-3.14/kpi
@@ -597,8 +613,8 @@
       end
 
       subroutine gauss(n,a,b,x,c,g)
-            real, dimension(n, n) :: a, c
-            real, dimension(n) :: b, x, g
+            real, dimension(AC, AC) :: a, c
+            real, dimension(AC) :: b, x, g
             real v,s
 
             n1=n-1
@@ -641,6 +657,14 @@
             do 50 l=1,n
 50          r=r*a(l,l)
             write(*,*) 'opr = ',fleft(r)
+            return
+      end
+      
+      subroutine fill(arr, n)
+            ARRAY :: arr
+            do i = 1, size(arr)
+              arr(i) = n
+            end do
             return
       end
       
