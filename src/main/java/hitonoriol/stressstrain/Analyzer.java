@@ -20,12 +20,11 @@ public class Analyzer extends Application {
 		Scene scene = new Scene(root);
 		scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
 
-		
 		primaryStage.setTitle("Stress Strain State Analyzer");
 		primaryStage.setScene(scene);
-        primaryStage.show();
-        primaryStage.setMinWidth(primaryStage.getWidth());
-        primaryStage.setMinHeight(primaryStage.getHeight());
+		primaryStage.show();
+		primaryStage.setMinWidth(primaryStage.getWidth());
+		primaryStage.setMinHeight(primaryStage.getHeight());
 	}
 
 	public static void main(String args[]) {
