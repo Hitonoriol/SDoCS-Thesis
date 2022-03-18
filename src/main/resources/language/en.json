@@ -1,9 +1,11 @@
-{
+﻿{
 	"FILE" : "File",
 	"OPEN_REPORT" : "Open report",
 	"QUIT" : "Quit",
+	
 	"HELP" : "Help",
 	"ABOUT" : "About",
+	"LANGUAGE" : "Language",
 
 	"INPUT_TITLE" : "Plate parameters",
 

@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="root" minHeight="480.0" minWidth="880.0" prefHeight="480.0" prefWidth="880.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hitonoriol.stressstrain.gui.calcscreen.MainScreenController">
+<VBox fx:id="root" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="880.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hitonoriol.stressstrain.gui.calcscreen.MainScreenController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
@@ -32,7 +32,9 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <Menu mnemonicParsing="false" text="{LANGUAGE}">
                     <items>
-                      <MenuItem mnemonicParsing="false" text="Action 1" />
+                      <MenuItem mnemonicParsing="false" text="English" />
+                        <MenuItem mnemonicParsing="false" text="Українська" />
+                        <MenuItem mnemonicParsing="false" text="Русский" />
                     </items>
                   </Menu>
           </items>
