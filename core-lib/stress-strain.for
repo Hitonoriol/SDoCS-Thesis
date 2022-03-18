@@ -3,39 +3,62 @@
 !              С ЦИЛИНДРИЧЕСКИМИ ГОФРАМИ
 !
 
+#define VAR_GETTER(var, vtype, bind_as) \
+      function get_/**/var() bind(C, name = bind_as); \
+            vtype :: get_/**/var; \
+            get_/**/var = var; \
+      end function
+
+#define PTR_GETTER(var, bind_as) \
+      function get_/**/var() bind(C, name = bind_as); \
+            type(C_PTR) :: get_/**/var; \
+            get_/**/var = c_loc( var ); \
+      end function
+
+#define ARRAY real(C_FLOAT), dimension(:), allocatable, target
+#define MATRIX real(C_FLOAT), dimension(:,:), allocatable, target
+
       module analyzer
       USE, INTRINSIC :: ISO_C_BINDING
       
-      ! Data for visualization (`zo` & `dzo`)
+      ! Data for visualization, `XYC` coords in each array
       integer(C_INT) :: XYC
-      real(C_FLOAT), dimension(:), allocatable, target :: xx, yy, xxx, yyy
+      ARRAY :: xx, yy, xxx, yyy
+      
+      ! Matrix `AC`x`AC`
+      integer(C_INT) :: AC
+      ARRAY :: b1, c1, g
+      MATRIX :: a, c
+      
+      ! Bias arrays `n`x`AC`
+      MATRIX :: w, w1, u, mom, qs, ny
+      
+      ! `n`x`n`
+      MATRIX :: alf
+      ARRAY :: f, q, qq, e, b
       
       contains
       
-      function get_xx() bind(C,name='getZOXPtr')
-            type(C_PTR) :: get_xx
-            get_xx = c_loc(xx)
-      end function
+      VAR_GETTER(XYC, integer(C_INT), 'getPlotPoints')
+      PTR_GETTER(xx, 'getZOXPtr')
+      PTR_GETTER(yy, 'getZOYPtr')
+      PTR_GETTER(xxx, 'getDZOXPtr')
+      PTR_GETTER(yyy, 'getDZOYPtr')
       
-      function get_yy() bind(C,name='getZOYPtr')
-            type(C_PTR) :: get_yy
-            get_yy = c_loc(yy)
-      end function
+      VAR_GETTER(AC, integer(C_INT), 'getMatrixSize')
+      PTR_GETTER(w, 'getWPtr')
+      PTR_GETTER(w1, 'getW1Ptr')
+      PTR_GETTER(u, 'getUPtr')
+      PTR_GETTER(mom, 'getMomPtr')
+      PTR_GETTER(qs, 'getQsPtr')
+      PTR_GETTER(ny, 'getNyPtr')
       
-      function get_xxx() bind(C,name='getDZOXPtr')
-            type(C_PTR) :: get_xxx
-            get_xxx = c_loc(xxx)
-      end function
-      
-      function get_yyy() bind(C,name='getDZOYPtr')
-            type(C_PTR) :: get_yyy
-            get_yyy = c_loc(yyy)
-      end function
-      
-      function get_plot_points() bind(C,name='getPlotPoints')
-            integer(C_INT) :: get_plot_points
-            get_plot_points = XYC
-      end function
+      PTR_GETTER(alf, 'getAlfPtr')
+      PTR_GETTER(f, 'getFPtr')
+      PTR_GETTER(q, 'getQPtr')
+      PTR_GETTER(qq, 'getQqPtr')
+      PTR_GETTER(e, 'getEPtr')
+      PTR_GETTER(b, 'getBPtr')
       
       subroutine calc_stress_strain_state(n, q1, q2, kpi, usl1, usl2) bind(C,name='calcStressStrainState')
             USE, INTRINSIC :: ISO_C_BINDING
@@ -43,16 +66,13 @@
             integer(C_INT), VALUE, intent(in) :: n, usl1, usl2
             real(C_FLOAT), VALUE, intent(in) :: q1, q2, kpi
 
-            integer m1, ii, zn, l, i, j, k, m, kl, m2, kl1, kl2, kl3, k1
-            real x, aa, dlna
-            real r, kzd, xzd, yzd
-
-            real, dimension(:,:), allocatable :: alf
-            real, dimension(:,:), allocatable :: w, w1, u, mom, qs, ny
-            real, dimension(:), allocatable :: f, q, qq, e, b
-            real, dimension(:), allocatable :: b1, c1, g
-            real, dimension(:,:), allocatable :: a, c
-            integer :: AC, QC
+            integer(C_INT) m1, ii, zn, l, i, j, k, m, kl, m2, kl1, kl2, kl3, k1
+            real(C_FLOAT) x, aa, dlna
+            real(C_FLOAT) r, kzd, xzd, yzd
+            
+            if (allocated(xx)) then
+              call dispose()
+            end if
             
             allocate(f(n))
             allocate(q(n))
@@ -71,17 +91,16 @@
             write(*,*) 'n: ',n
             h=1.
             aa=50.
-            
-            QC = n + int((aa*3.14/kpi) / 10) * 2
-            write(*,*) 'Alloc [',n,',',QC,']'
-            allocate(w(n, QC))
-            allocate(w1(n, QC))
-            allocate(u(n, QC))
-            allocate(mom(n, QC))
-            allocate(qs(n, QC))
-            allocate(ny(n, QC))
-            
             write(*,*) 'q1, q2: ',q1,', ',q2
+
+            write(*,*) 'Allocating bias arrays [',n,',',AC,']'
+            allocate(w(n, AC))
+            allocate(w1(n, AC))
+            allocate(u(n, AC))
+            allocate(mom(n, AC))
+            allocate(qs(n, AC))
+            allocate(ny(n, AC))
+            
             do 2 i=1,n,2
 2           q(i)=q1
             do 22 i=2,n,2
@@ -566,25 +585,6 @@
             close(unit=17)
             
             write(*,*) 'Finished all calculations, deallocating dynamic stuff...'
-            
-            deallocate(b1)
-            deallocate(c1)
-            deallocate(g)
-            deallocate(a)
-            deallocate(c)
-            deallocate(w)
-            deallocate(w1)
-            deallocate(u)
-            deallocate(mom)
-            deallocate(qs)
-            deallocate(ny)
-            deallocate(f)
-            deallocate(q)
-            deallocate(qq)
-            deallocate(e)
-            deallocate(b)
-            deallocate(alf)
-            
             write(*,*) 'Done!'
             return
       end
@@ -649,6 +649,23 @@
             deallocate(yy)
             deallocate(xxx)
             deallocate(yyy)
+            deallocate(b1)
+            deallocate(c1)
+            deallocate(g)
+            deallocate(a)
+            deallocate(c)
+            deallocate(w)
+            deallocate(w1)
+            deallocate(u)
+            deallocate(mom)
+            deallocate(qs)
+            deallocate(ny)
+            deallocate(f)
+            deallocate(q)
+            deallocate(qq)
+            deallocate(e)
+            deallocate(b)
+            deallocate(alf)
       return
       end
       end

@@ -1,7 +1,7 @@
 NAME:=stress-strain
 LIB_NAME:=lib$(NAME).so
 RES_PATH:=../src/main/resources
-FLAGS:=-Wall -ffree-form -fno-underscoring -fmax-stack-var-size=1048576 -std=legacy
+FLAGS:=-Wall -ffree-form -ffree-line-length-none -cpp -fno-underscoring -std=legacy -static-libgfortran
 
 ifdef DEBUG
 	FLAGS+=-g
