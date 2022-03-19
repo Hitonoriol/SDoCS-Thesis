@@ -33,6 +33,9 @@ class ReportTab extends Tab {
 	ReportTab(PlateDescriptor input, StressStrainAnalyzer analyzer) {
 		this.analyzer = analyzer;
 		this.plateDescriptor = input;
+		ScrollPane scroll = new ScrollPane(contents);
+		scroll.setFitToWidth(true);
+		setContent(scroll);
 	}
 	
 	void refreshContents(PlateDescriptor input) {
@@ -41,11 +44,8 @@ class ReportTab extends Tab {
 	}
 	
 	void refreshContents() {
-		ScrollPane scroll = new ScrollPane(contents);
-		scroll.setFitToWidth(true);
-		setContent(scroll);
+		contents.getChildren().clear();
 		createPlot();
-
 		addEntry(Locale.get("REPORT"), reportText);
 		addEntry(Locale.get("PLOT"), plot);
 		contents.getChildren().add(saveReportBtn);
