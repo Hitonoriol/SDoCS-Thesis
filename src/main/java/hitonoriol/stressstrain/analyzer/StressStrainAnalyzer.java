@@ -1,7 +1,5 @@
 package hitonoriol.stressstrain.analyzer;
 
-import static hitonoriol.stressstrain.Util.toInt;
-
 import java.util.function.BiConsumer;
 
 import com.sun.jna.Native;
@@ -44,5 +42,9 @@ public class StressStrainAnalyzer {
 	
 	public StressStrainLibrary getLibrary() {
 		return library;
+	}
+	
+	private static int toInt(boolean b) {
+		return b ? 1 : 0;
 	}
 }

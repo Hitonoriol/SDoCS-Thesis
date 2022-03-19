@@ -39,7 +39,7 @@ public class Locale {
 			e.printStackTrace();
 			return null;
 		}
-		return instance.substitutor.replace(src);
+		return localize(src);
 	}
 
 	/* Load a localized FXML file from classpath */
@@ -51,6 +51,10 @@ public class Locale {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static String localize(String str) {
+		return instance.substitutor.replace(str);
 	}
 
 	/* Get localization variable value by name without substitution */

@@ -43,7 +43,7 @@
     </MenuBar>
       <SplitPane dividerPositions="0.25">
          <items>
-            <TitledPane fx:id="inputPane" alignment="TOP_LEFT" animated="false" collapsible="false" contentDisplay="TOP" text="{INPUT_TITLE}" wrapText="true">
+            <TitledPane fx:id="inputPane" alignment="TOP_LEFT" animated="false" collapsible="false" contentDisplay="TOP" maxWidth="350.0" text="{INPUT_TITLE}" wrapText="true">
                <content>
                   <VBox minWidth="225.0" spacing="25.0">
                      <children>

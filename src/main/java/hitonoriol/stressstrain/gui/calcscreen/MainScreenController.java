@@ -29,6 +29,7 @@ public class MainScreenController implements Initializable {
 	private TitledPane inputPane;
 	@FXML
 	private TabPane resultPane;
+	private Tab addTab = new Tab("+");
 
 	/* Initiates the stress strain state calculation with current parameters */
 	@FXML
@@ -54,11 +55,22 @@ public class MainScreenController implements Initializable {
 				.forEach(lbl -> lbl.maxWidthProperty().bind(inputPane.widthProperty()));
 		inputPane.prefHeightProperty().bind(root.heightProperty());
 		nField.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Integer.MAX_VALUE, 1, 1));
+		initTabListener();
+	}
 
+	private void initTabListener() {
+		ObservableList<Tab> tabs = resultPane.getTabs();
+		addTab.setClosable(false);
 		resultPane.getSelectionModel().selectedItemProperty()
-				.addListener((ov, oldTab, newTab) -> {
-					restoreInputs(((ReportTab) newTab).getPlateDescriptor());
+				.addListener((observable, oldTab, newTab) -> {
+					if (newTab == addTab) {
+						tabs.add(resultPane.getTabs().size() - 1, newTab());
+						resultPane.getSelectionModel().select(tabs.size() - 2);
+					} else {
+						restoreInputs(((ReportTab) newTab).getPlateDescriptor());
+					}
 				});
+		tabs.add(addTab);
 	}
 
 	/* Called when `calcBtn` is pressed */
@@ -70,19 +82,21 @@ public class MainScreenController implements Initializable {
 				kpiField.getValue().floatValue(),
 				usl1Check.isSelected(), usl2Check.isSelected());
 
-		if (resultPane.getTabs().isEmpty())
-			newTab();
-		else {
-			ReportTab tab = (ReportTab) resultPane.getSelectionModel().getSelectedItem();
-			tab.refreshContents(new PlateDescriptor(this));
-		}
+		ObservableList<Tab> tabs = resultPane.getTabs();
+		ReportTab tab;
+		if (tabs.isEmpty())
+			tabs.add(tab = newTab());
+		else
+			tab = (ReportTab) resultPane.getSelectionModel().getSelectedItem();
+
+		tab.refreshContents(new PlateDescriptor(this));
 	}
 
-	private void newTab() {
-		Tab tab = new ReportTab(new PlateDescriptor(this), analyzer);
+	private ReportTab newTab() {
+		ReportTab tab = new ReportTab(new PlateDescriptor(this), analyzer);
 		ObservableList<Tab> tabs = resultPane.getTabs();
-		tabs.add(tab);
 		tab.setText("Report " + tabs.size());
+		return tab;
 	}
 
 	void restoreInputs(PlateDescriptor inputs) {

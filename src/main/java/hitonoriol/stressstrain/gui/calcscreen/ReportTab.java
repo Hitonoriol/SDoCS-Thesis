@@ -33,7 +33,6 @@ class ReportTab extends Tab {
 	ReportTab(PlateDescriptor input, StressStrainAnalyzer analyzer) {
 		this.analyzer = analyzer;
 		this.plateDescriptor = input;
-		refreshContents();
 	}
 	
 	void refreshContents(PlateDescriptor input) {
