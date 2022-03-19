@@ -77,19 +77,19 @@
             end if
             
             QC = max(30, n)
-            allocate(f(QC))
-            allocate(q(QC))
-            allocate(qq(QC))
-            allocate(e(QC))
-            allocate(b(QC))
-            allocate(alf(n, 6))
+            allocate(f(QC)); call fill(f, 0)
+            allocate(q(QC)); call fill(q, 0)
+            allocate(qq(QC)); call fill(qq, 0)
+            allocate(e(QC)); call fill(e, 0)
+            allocate(b(QC)); call fill(b, 0)
+            allocate(alf(n, 6)); call fill2d(alf, 0)
             
             AC = max(12, n * 6)
-            allocate(b1(AC))
-            allocate(c1(AC))
-            allocate(g(AC))
-            allocate(a(AC, AC))
-            allocate(c(AC, AC))
+            allocate(b1(AC)); call fill(b1, 0)
+            allocate(c1(AC)); call fill(c1, 0)
+            allocate(g(AC)); call fill(g, 0)
+            allocate(a(AC, AC)); call fill2d(a, 0)
+            allocate(c(AC, AC)); call fill2d(c, 0)
 
             write(*,*) 'n: ',n
             h=1.
@@ -97,13 +97,13 @@
             write(*,*) 'q1, q2: ',q1,', ',q2
 
             WC = max(30, AC)
-            write(*,*) 'Allocating bias arrays [',n,',',WC,']'
-            allocate(w(WC, WC))
-            allocate(w1(WC, WC))
-            allocate(u(WC, WC))
-            allocate(mom(WC, WC))
-            allocate(qs(WC, WC))
-            allocate(ny(WC, WC))
+            write(*,*) 'Allocating bias arrays [',WC,',',WC,']'
+            allocate(w(WC, WC)); call fill2d(w, 0)
+            allocate(w1(WC, WC)); call fill2d(w1, 0)
+            allocate(u(WC, WC)); call fill2d(u, 0)
+            allocate(mom(WC, WC)); call fill2d(mom, 0)
+            allocate(qs(WC, WC)); call fill2d(qs, 0)
+            allocate(ny(WC, WC)); call fill2d(ny, 0)
             
             do 2 i=1,n,2
 2           q(i)=q1
@@ -482,7 +482,6 @@
             write(41,501) ' usl1=',usl1, ' usl2=',usl2
             write(41,*)
             write(41,*)
-            write(41,*)'            Погрешности стыковки (абсолютные)'
             write(41,*)      '-------------------------------------------------------------------'
             write(41,*)      '|   U - U  |   W - W  |  W^ - W^ |   N - N  |  M - M  |   Q - Q  |'
             write(41,*)      '-------------------------------------------------------------------'
@@ -559,6 +558,7 @@
             if(m1.le.n) goto 56
             close(unit=16)
 
+            write(*,*) 'Calculating dZo...'
             open(unit=17,file='dzo')
             i=1
             k1=0
@@ -568,7 +568,9 @@
             r=aa
             fi=-3.14/kpi
             kzd=1.
-57          xxx(i)=k1*r+r+(r+w(m1,ii))*sin(fi+u(m1,ii)/r)-kzd*xzd
+57          write(*,*) 'w[', m1, ii, '] = ', w(m1, ii)
+            write(*,*) 'u[', m1, ii, '] = ', u(m1, ii)
+            xxx(i)=k1*r+r+(r+w(m1,ii))*sin(fi+u(m1,ii)/r)-kzd*xzd
             yyy(i)=(r+w(m1,ii))*cos(fi+u(m1,ii)/r)-yzd
             write(17,*) xxx(i),yyy(i)
             fi=fi+10./aa
@@ -664,6 +666,16 @@
             ARRAY :: arr
             do i = 1, size(arr)
               arr(i) = n
+            end do
+            return
+      end
+      
+      subroutine fill2d(arr, n)
+            MATRIX :: arr
+            do i = 1, size(arr, 1)
+              do j = 1, size(arr, 2)
+                arr(i, j) = n
+              end do
             end do
             return
       end
