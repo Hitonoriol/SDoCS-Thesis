@@ -22,6 +22,7 @@ import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TitledPane;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 
 public class MainScreenController implements Initializable {
@@ -56,7 +57,7 @@ public class MainScreenController implements Initializable {
 	public MainScreenController() {
 		Util.out("Created a new %s", this);
 	}
-	
+
 	@Override
 	@FXML
 	public void initialize(URL location, ResourceBundle resources) {
@@ -65,6 +66,10 @@ public class MainScreenController implements Initializable {
 		inputPane.prefHeightProperty().bind(root.heightProperty());
 		nField.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Integer.MAX_VALUE, 1, 1));
 		initTabListener();
+		inputPane.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode().equals(KeyCode.ENTER))
+				calculate();
+		});
 	}
 
 	private void initTabListener() {
@@ -85,7 +90,6 @@ public class MainScreenController implements Initializable {
 	/* Called when `calcBtn` is pressed */
 	@FXML
 	private void calculate(ActionEvent event) {
-		event.consume();
 		analyzer.calcStressStrainState(nField.getValue(),
 				q1Field.getValue().floatValue(), q2Field.getValue().floatValue(),
 				kpiField.getValue().floatValue(),
@@ -101,11 +105,16 @@ public class MainScreenController implements Initializable {
 		tab.refreshContents(new PlateDescriptor(this));
 	}
 
+	private void calculate() {
+		calculate(null);
+	}
+
 	/* 
 	 * Each language menu item is named using the next scheme: `Language [lng]`
 	 * where `lng` corresponds to .json localization map in /language/ resource directory 
 	 */
 	Pattern langPattern = Pattern.compile("\\[(.+?)\\]");
+
 	@FXML
 	private void chooseLanguage(ActionEvent event) {
 		MenuItem langItem = (MenuItem) event.getTarget();
