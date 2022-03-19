@@ -8,7 +8,10 @@ import java.util.Map;
 
 import org.apache.commons.text.StringSubstitutor;
 
+import hitonoriol.stressstrain.Analyzer;
 import hitonoriol.stressstrain.Util;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 
 public class Locale {
 	private final static Locale instance = new Locale();
@@ -22,12 +25,19 @@ public class Locale {
 	}
 
 	public static void loadLanguage(String lang) {
-		if (!instance.locMap.isEmpty())
+		Util.out("Loading language: %s", lang);
+		boolean langUpdated;
+		if (langUpdated = !instance.locMap.isEmpty())
 			Prefs.values().updateLanguage(lang);
 
 		instance.locMap.clear();
 		instance.locMap.putAll(Resources.loadMap("/language/" + lang + ".json", String.class, String.class));
-		instance.locMap.forEach((k, v) -> Util.out("%s: %s", k, v));
+		
+		if (langUpdated) {
+			Analyzer app = Analyzer.app();
+			Resources.newFXMLLoader();
+			app.loadMainScreen(new Scene(loadFXML(Resources.MAIN_SCREEN, app.mainController())));
+		}
 	}
 
 	/* Read a localized file from classpath, replacing localization placeholders with values from currently loaded locale */
@@ -42,15 +52,24 @@ public class Locale {
 		return localize(src);
 	}
 
-	/* Load a localized FXML file from classpath */
-	public static <T> T loadFXML(String file) {
+	/* (Re)Load a localized FXML file from classpath */
+	public static <T> T loadFXML(String file, Object controller) {
 		try {
-			return Resources.fxmlLoader()
-					.load(new ByteArrayInputStream(readFile(file).getBytes(UTF8)));
+			FXMLLoader loader = Resources.fxmlLoader();
+			String fxml = readFile(file);
+			if (controller != null) {
+				loader.setController(controller);
+				fxml = Resources.removeFXMLController(fxml);
+			}
+			return loader.load(new ByteArrayInputStream(fxml.getBytes(UTF8)));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static <T> T loadFXML(String file) {
+		return loadFXML(file, null);
 	}
 	
 	public static String localize(String str) {

@@ -3,8 +3,12 @@ package hitonoriol.stressstrain.gui.calcscreen;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import hitonoriol.stressstrain.Util;
 import hitonoriol.stressstrain.analyzer.StressStrainAnalyzer;
+import hitonoriol.stressstrain.resources.Locale;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -12,6 +16,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.Tab;
@@ -48,6 +53,10 @@ public class MainScreenController implements Initializable {
 	@FXML
 	private Label nLabel, qLabel, kpiLabel, uslLabel;
 
+	public MainScreenController() {
+		Util.out("Created a new %s", this);
+	}
+	
 	@Override
 	@FXML
 	public void initialize(URL location, ResourceBundle resources) {
@@ -92,10 +101,23 @@ public class MainScreenController implements Initializable {
 		tab.refreshContents(new PlateDescriptor(this));
 	}
 
+	/* 
+	 * Each language menu item is named using the next scheme: `Language [lng]`
+	 * where `lng` corresponds to .json localization map in /language/ resource directory 
+	 */
+	Pattern langPattern = Pattern.compile("\\[(.+?)\\]");
+	@FXML
+	private void chooseLanguage(ActionEvent event) {
+		MenuItem langItem = (MenuItem) event.getTarget();
+		Matcher matcher = langPattern.matcher(langItem.getText());
+		matcher.find();
+		Locale.loadLanguage(matcher.group(1));
+	}
+
 	private ReportTab newTab() {
 		ReportTab tab = new ReportTab(new PlateDescriptor(this), analyzer);
 		ObservableList<Tab> tabs = resultPane.getTabs();
-		tab.setText("Report " + tabs.size());
+		tab.setText(Locale.get("REPORT") + " " + tabs.size());
 		return tab;
 	}
 
