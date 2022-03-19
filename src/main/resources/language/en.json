@@ -19,6 +19,16 @@
 	"CALC_TEXT" : "Calculate",
 	
 	"REPORT" : "Report",
+	"CHAR" : "Stress-strain state characteristics of the structure",
+	"BIAS" : "Coupling errors",
 	"PLOT" : "Plot of the compound structure before (Zo) and after (dZo) the deformation",
+	"ZOOM_ZO" : "Zoom in on Zo",
+	"ZOOM_DZO" : "Zoom in on dZo",
+	"XRANGE" : "X values in range",
+	"FROM" : "from",
+	"TO" : "to",
+	"YRANGE" : "Y values",
+	"ZO_TEXT" : "Zo curve point list",
+	"DZO_TEXT" : "dZo curve point list",
 	"SAVE_TEXT" : "Save report"
 }

@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="root" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="880.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hitonoriol.stressstrain.gui.calcscreen.MainScreenController">
+<VBox fx:id="root" minHeight="-Infinity" minWidth="-Infinity" prefHeight="525.0" prefWidth="800.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hitonoriol.stressstrain.gui.calcscreen.MainScreenController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
