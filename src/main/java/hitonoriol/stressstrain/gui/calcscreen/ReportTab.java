@@ -61,7 +61,7 @@ class ReportTab extends Tab {
 		});
 		setContent(scroll);
 
-		saveReportBtn.setOnAction(event -> {/* TODO */});
+		saveReportBtn.setOnAction(event -> new Report(plateDescriptor).save(getText() + ".json"));
 	}
 
 	void refreshContents(PlateDescriptor input) {
@@ -74,12 +74,14 @@ class ReportTab extends Tab {
 		createPlot();
 
 		/* Just for testing / TODO: Load this data from library and format it properly */
-		//addTextEntry(Locale.get("CHAR"), Resources.readExternal("stress-strain.dat"));
+		// addTextEntry(Locale.get("CHAR"),
+		// Resources.readExternal("stress-strain.dat"));
 		addEntry(Locale.get("CHAR"),
 				new FloatTable(
 						analyzer.getStressStrainTable(),
 						"x", "U(x)", "W(x)", "W^(X)", "N(x)", "M(x)", "Q(x)"));
-		//addTextEntry(Locale.get("BIAS"), Resources.readExternal("stress-strain.bias"));
+		// addTextEntry(Locale.get("BIAS"),
+		// Resources.readExternal("stress-strain.bias"));
 		addEntry(Locale.get("BIAS"),
 				new FloatTable(
 						analyzer.getCouplingErrorTable(),

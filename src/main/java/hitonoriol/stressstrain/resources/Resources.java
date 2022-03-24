@@ -32,9 +32,16 @@ public class Resources {
 		mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator());
 	}
 
+	public final static File reportDir = new File("reports");
+
+	static {
+		if (!reportDir.exists())
+			reportDir.mkdirs();
+	}
+
 	public final static Font FNT_MONOSPACE = Font
 			.loadFont(Resources.class.getResource("/RobotoMono.ttf").toExternalForm(), 14);
-	
+
 	private Resources() {}
 
 	public static MapType getMapType(Class<?> key, Class<?> value) {
@@ -53,6 +60,25 @@ public class Resources {
 		try {
 			return mapper.readValue(Resources.class.getResourceAsStream(file),
 					getMapType(keyType, valueType));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static <T> boolean serialize(String path, T obj) {
+		try {
+			mapper.writeValue(new File(path), obj);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static <T> T deserialize(String path, Class<T> clazz) {
+		try {
+			return mapper.readerFor(clazz).readValue(new File(path));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
