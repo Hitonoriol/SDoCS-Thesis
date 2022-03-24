@@ -52,7 +52,7 @@ public class Analyzer extends Application {
 		return mainController;
 	}
 
-	public static void main(String args[]) {
+	public static void run(String args[]) {
 		Prefs.init();
 		launch(args);
 	}

@@ -29,7 +29,7 @@ javafx {
 }
 
 version = '0.1'
-mainClassName = 'hitonoriol.stressstrain.Analyzer'
+mainClassName = 'hitonoriol.stressstrain.Main'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
