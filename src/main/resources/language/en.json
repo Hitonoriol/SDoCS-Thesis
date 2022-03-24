@@ -18,10 +18,14 @@
 	
 	"CALC_TEXT" : "Calculate",
 	
+	"SETTINGS" : "Settings",
+	"SCIENTIFIC_NOT" : "Use scientific notation for input parameters",
+	"Q_STEP" : "Value change step for fields q1 and q2",
+	
 	"REPORT" : "Report",
 	"CHAR" : "Stress-strain state characteristics of the structure",
 	"BIAS" : "Coupling errors",
-	"PLOT" : "Plot of the compound structure before (Zo) and after (dZo) the deformation",
+	"PLOT" : "Transverse section of the plate before (Zo) and after (dZo) the deformation",
 	"ZOOM_ZO" : "Zoom in on Zo",
 	"ZOOM_DZO" : "Zoom in on dZo",
 	"XRANGE" : "X values in range",

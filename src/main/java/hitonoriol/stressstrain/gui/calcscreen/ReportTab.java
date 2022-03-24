@@ -29,7 +29,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.FontSmoothingType;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
 class ReportTab extends Tab {
@@ -61,6 +60,8 @@ class ReportTab extends Tab {
 			scroll.setVvalue(vvalue + -deltaY / diff);
 		});
 		setContent(scroll);
+
+		saveReportBtn.setOnAction(event -> {/* TODO */});
 	}
 
 	void refreshContents(PlateDescriptor input) {
@@ -73,8 +74,16 @@ class ReportTab extends Tab {
 		createPlot();
 
 		/* Just for testing / TODO: Load this data from library and format it properly */
-		addTextEntry(Locale.get("CHAR"), Resources.readExternal("stress-strain.dat"));
-		addTextEntry(Locale.get("BIAS"), Resources.readExternal("stress-strain.bias"));
+		//addTextEntry(Locale.get("CHAR"), Resources.readExternal("stress-strain.dat"));
+		addEntry(Locale.get("CHAR"),
+				new FloatTable(
+						analyzer.getStressStrainTable(),
+						"x", "U(x)", "W(x)", "W^(X)", "N(x)", "M(x)", "Q(x)"));
+		//addTextEntry(Locale.get("BIAS"), Resources.readExternal("stress-strain.bias"));
+		addEntry(Locale.get("BIAS"),
+				new FloatTable(
+						analyzer.getCouplingErrorTable(),
+						"U - U", "W - W", "W^ - W^", "N - N", "M - M", "Q - Q"));
 
 		addPlot();
 		addTextEntry(Locale.get("ZO_TEXT"),

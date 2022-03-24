@@ -3,11 +3,17 @@ package hitonoriol.stressstrain.gui.calcscreen;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
 import hitonoriol.stressstrain.Util;
 import hitonoriol.stressstrain.analyzer.StressStrainAnalyzer;
+import hitonoriol.stressstrain.gui.DoubleFormatter;
+import hitonoriol.stressstrain.gui.DoubleFormatter.Format;
 import hitonoriol.stressstrain.resources.Locale;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,8 +25,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TitledPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
@@ -31,6 +40,8 @@ public class MainScreenController implements Initializable {
 	/* Sections of the main window */
 	@FXML
 	private VBox root;
+	@FXML
+	private VBox sideBar; // Contains `inputPane` & settings pane
 	@FXML
 	private TitledPane inputPane;
 	@FXML
@@ -51,6 +62,12 @@ public class MainScreenController implements Initializable {
 	@FXML
 	private CheckBox usl1Check, usl2Check;
 
+	/* Settings pane contents */
+	@FXML
+	private CheckBox sciNotationCheck;
+	@FXML
+	private TextField qStepField;
+
 	@FXML
 	private Label nLabel, qLabel, kpiLabel, uslLabel;
 
@@ -61,14 +78,37 @@ public class MainScreenController implements Initializable {
 	@Override
 	@FXML
 	public void initialize(URL location, ResourceBundle resources) {
-		Arrays.asList(nLabel, qLabel, kpiLabel, uslLabel)
-				.forEach(lbl -> lbl.maxWidthProperty().bind(inputPane.widthProperty()));
-		inputPane.prefHeightProperty().bind(root.heightProperty());
+		/* Bind sidebar height to window height */
+		sideBar.prefHeightProperty().bind(root.heightProperty());
+
+		/* Set Integer input filter for segment count field */
 		nField.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Integer.MAX_VALUE, 1, 1));
+		Pattern intPattern = Pattern.compile("\\d+");
+		nField.getEditor().setTextFormatter(new TextFormatter<Integer>(
+				c -> intPattern.matcher(c.getControlNewText()).matches() ? c : null));
+
 		initTabListener();
+		setDecimalFormat(Format.DECIMAL);
+
+		/* Perform calculations on `Enter` key press */
 		inputPane.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode().equals(KeyCode.ENTER))
 				calculate();
+		});
+
+		/* Toggle scientific notation */
+		sciNotationCheck.setOnAction(event -> {
+			setDecimalFormat(sciNotationCheck.isSelected() ? Format.SCIENTIFIC : Format.DECIMAL);
+		});
+
+		/* Change `q1Field` & `q2Field` step amount */
+		Consumer<Spinner<Double>> stepSetter = field -> ((DoubleSpinnerValueFactory) field.getValueFactory())
+				.setAmountToStepBy(Double.valueOf(qStepField.getText()));
+		qStepField.setOnKeyTyped(event -> {
+			if (qStepField.getText().isEmpty())
+				qStepField.setText("0");
+			stepSetter.accept(q1Field);
+			stepSetter.accept(q2Field);
 		});
 	}
 
@@ -80,11 +120,26 @@ public class MainScreenController implements Initializable {
 					if (newTab == addTab) {
 						tabs.add(resultPane.getTabs().size() - 1, newTab());
 						resultPane.getSelectionModel().select(tabs.size() - 2);
-					} else {
+					} else
 						restoreInputs(((ReportTab) newTab).getPlateDescriptor());
-					}
 				});
 		tabs.add(addTab);
+	}
+
+	private void setDecimalFormat(Format format) {
+		Arrays.asList(q1Field, q2Field, kpiField).forEach(spinner -> setFormatter(spinner, format));
+		setFormatter(qStepField, format);
+	}
+
+	private void setFormatter(Spinner<Double> spinner, Format format) {
+		TextFormatter<Double> formatter = new DoubleFormatter(format, spinner.getValueFactory().getValue());
+		spinner.getValueFactory().setConverter(formatter.getValueConverter());
+		spinner.getEditor().setTextFormatter(formatter);
+	}
+
+	private void setFormatter(TextField field, Format format) {
+		TextFormatter<Double> formatter = new DoubleFormatter(format, Double.valueOf(field.getText()));
+		field.setTextFormatter(formatter);
 	}
 
 	/* Called when `calcBtn` is pressed */
@@ -123,7 +178,7 @@ public class MainScreenController implements Initializable {
 		Locale.loadLanguage(matcher.group(1));
 	}
 
-	private ReportTab newTab() {
+	ReportTab newTab() {
 		ReportTab tab = new ReportTab(new PlateDescriptor(this), analyzer);
 		ObservableList<Tab> tabs = resultPane.getTabs();
 		tab.setText(Locale.get("REPORT") + " " + tabs.size());
@@ -139,6 +194,7 @@ public class MainScreenController implements Initializable {
 		usl1Check.setSelected(inputs.usl2);
 	}
 
+	@JsonAutoDetect(fieldVisibility = Visibility.ANY)
 	static class PlateDescriptor {
 		int n;
 		float q1, q2;
