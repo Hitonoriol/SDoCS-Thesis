@@ -20,3 +20,5 @@ bin
 *.dll
 *.mod
 *.cfg
+core-lib/ss-initial-unsafe
+*.so

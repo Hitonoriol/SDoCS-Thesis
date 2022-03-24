@@ -26,8 +26,18 @@ public interface StressStrainLibrary extends Library {
 	Pointer getDZOXPtr();
 	Pointer getDZOYPtr();
 	
-	/* Frees all allocated memory used for calculations.
-	 * This library instance must not be used after calling `dispose()`.
-	 */
+	/* Stress-strain state characteristics table */
+	Pointer getOutTablePtr();
+	int outTableSize();
+	int outTableWidth();
+	void outTableFree();
+	
+	/* Coupling errors table */
+	Pointer getBiasTablePtr();
+	int biasTableSize();
+	int biasTableWidth();
+	void biasTableFree();
+	
+	/* Frees all allocated memory used for calculations. */
 	void dispose();
 }

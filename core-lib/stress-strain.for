@@ -3,11 +3,52 @@
 !              С ЦИЛИНДРИЧЕСКИМИ ГОФРАМИ
 !
 
+#define ARRAY real(C_FLOAT), dimension(:), allocatable, target
+#define MATRIX real(C_FLOAT), dimension(:,:), allocatable, target
+#define LIST type(list_t)
+
 #define VAR_GETTER(var, vtype, bind_as) \
       function get_/**/var() bind(C, name = bind_as); \
             vtype :: get_/**/var; \
             get_/**/var = var; \
       end function
+
+#define PUBLIC_LIST(var) \
+      LIST :: var; \
+      ARRAY :: var/**/_data(:);
+
+#define STR_(x) "x"
+#define STR(x) STR_(x)
+
+! Create getters for a C pointer to the `var` list's underlying array & it's length
+! + Create extracted array's "destructor" to avoid memory leaks
+#define LIST_GETTER(var, bind_as) \
+      function get_/**/var() bind(C, name = bind_as); \
+            type(C_PTR) :: get_/**/var; \
+            allocate(var/**/_data(var%n)); \
+            call move_alloc(var%data, var/**/_data); \
+            get_/**/var = c_loc(var/**/_data); \
+      end function; \
+      function var/**/Size() bind(C, name = STR(var/**/Size)); \
+            integer(C_INT) :: var/**/Size; \
+            var/**/Size = var%n; \
+      end function; \
+      function var/**/Width() bind(C, name = STR(var/**/Width)); \
+            integer(C_INT) :: var/**/Width; \
+            var/**/Width = var%width; \
+      end function; \
+      subroutine var/**/Free() bind(C, name = STR(var/**/Free)); \
+            write(*,*) 'Deallocating internal list data of size: ', var%n; \
+            if (allocated(var%data)) then; \
+              write(*,*) 'Deallocating `data` directly...'; \
+              deallocate(var%data); \
+            else if (allocated(var/**/_data)) then; \
+              write(*,*) 'Freeing extracted data...'; \
+              deallocate(var/**/_data); \
+            endif; \
+            var%n = 0; \
+            write(*,*)'Deallocation of ',STR(var),'`s data finished!'; \
+      end subroutine;
 
 #define PTR_GETTER(var, bind_as) \
       function get_/**/var() bind(C, name = bind_as); \
@@ -15,11 +56,14 @@
             get_/**/var = c_loc( var ); \
       end function
 
-#define ARRAY real(C_FLOAT), dimension(:), allocatable, target
-#define MATRIX real(C_FLOAT), dimension(:,:), allocatable, target
+#define OUT(i, j) \
+      ' |',x,'|',u(i,j),'|',w(i,j),'|',w1(i,j),'|',ny(i,j),'|',mom(i,j),'|',qs(i,j),'|'; \
+      call append(outTable, x);call append(outTable, u(i,j));call append(outTable, w(i,j)); \
+      call append(outTable, w1(i,j));call append(outTable, ny(i,j));call append(outTable, mom(i,j));call append(outTable, qs(i,j));
 
       module analyzer
       USE, INTRINSIC :: ISO_C_BINDING
+      use arraylist
       
       ! Data for visualization, `XYC` coords in each array
       integer(C_INT) :: XYC
@@ -39,7 +83,14 @@
       MATRIX :: alf
       ARRAY :: f, q, qq, e, b
       
+      ! Output calculations & bias tables
+      PUBLIC_LIST(outTable)
+      PUBLIC_LIST(biasTable)
+      
       contains
+      
+      LIST_GETTER(outTable, 'getOutTablePtr')
+      LIST_GETTER(biasTable, 'getBiasTablePtr')
       
       VAR_GETTER(XYC, integer(C_INT), 'getPlotPoints')
       PTR_GETTER(xx, 'getZOXPtr')
@@ -68,13 +119,19 @@
             integer(C_INT), VALUE, intent(in) :: n, usl1, usl2
             real(C_FLOAT), VALUE, intent(in) :: q1, q2, kpi
 
+            integer z
             integer(C_INT) m1, ii, zn, l, i, j, k, m, kl, m2, kl1, kl2, kl3, k1
             real(C_FLOAT) x, aa, dlna
             real(C_FLOAT) r, kzd, xzd, yzd
             
             if (allocated(xx)) then
               call dispose()
+              call outTableFree()
+              call biasTableFree()
             end if
+            
+            outTable = mkmatrix(10, 7)
+            biasTable = mkmatrix(10, 6)
             
             QC = max(30, n)
             allocate(f(QC)); call fill(f, 0)
@@ -83,6 +140,7 @@
             allocate(e(QC)); call fill(e, 0)
             allocate(b(QC)); call fill(b, 0)
             allocate(alf(n, 6)); call fill2d(alf, 0)
+            write(*,*) 'QC = ', QC
             
             AC = max(12, n * 6)
             allocate(b1(AC)); call fill(b1, 0)
@@ -90,6 +148,7 @@
             allocate(g(AC)); call fill(g, 0)
             allocate(a(AC, AC)); call fill2d(a, 0)
             allocate(c(AC, AC)); call fill2d(c, 0)
+            write(*,*) 'AC = ', AC
 
             write(*,*) 'n: ',n
             h=1.
@@ -104,6 +163,7 @@
             allocate(mom(WC, WC)); call fill2d(mom, 0)
             allocate(qs(WC, WC)); call fill2d(qs, 0)
             allocate(ny(WC, WC)); call fill2d(ny, 0)
+            write(*,*) 'WC = ', WC
             
             do 2 i=1,n,2
 2           q(i)=q1
@@ -415,13 +475,15 @@
             write(40,*)'-------------------------------------------------------------------------------------'
             write(40,*)'|  x  |    U(x)    |    W(x)    |   W^(x)    |    N(x)    |    M(x)    |    Q(x)    |'
             write(40,*)'-------------------------------------------------------------------------------------'
-451         write(40,400)' |',x,'|',u(m1,i),'|',w(m1,i),'|',w1(m1,i),'|',ny(m1,i),'|',mom(m1,i),'|',qs(m1,i),'|'
+451         write(40,400)OUT(m1,i)
             x=x+30.
             i=i+3
             if(x.le.(aa*3.14/kpi)) goto 451
             x=aa*3.14/kpi
             i=kl
-            if (i .gt. 0) write(40,400)' |',x,'|',u(m1,i),'|',w(m1,i),'|',w1(m1,i),'|',ny(m1,i),'|',mom(m1,i),'|',qs(m1,i),'|'
+            if (i .gt. 0) then
+              write(40,400)OUT(m1,i)
+            endif
             i = max(1, i)
 
 !           Вычисление погрешностей
@@ -454,7 +516,9 @@
             ii=kl
             write(*,*) 'kl2=', kl2, 'kl3=', kl3, 'kl=', kl
             write(40,*) ' '
-452         if (ii .gt. 0) write(40,400)' |',x,'|',u(m2,ii),'|',w(m2,ii),'|',w1(m2,ii),'|',ny(m2,ii),'|',mom(m2,ii),'|',qs(m2,ii),'|'
+452         if (ii .gt. 0) then
+              write(40,400)OUT(m2,ii)
+            endif
             x=x-30.
             ii=ii-3
             dlna=-aa*3.14/kpi
@@ -463,7 +527,7 @@
             x=-aa*3.14/kpi
             if(usl2.eq.1.and.m2.eq.n) x=0.
             ii=1
-            write(40,400)' |',x,'|',u(m2,ii),'|',w(m2,ii),'|',w1(m2,ii),'|',ny(m2,ii),'|',mom(m2,ii),'|',qs(m2,ii),'|'
+            write(40,400)OUT(m2,ii)
 
             m1=m1+2
             m2=m2+2
@@ -487,6 +551,9 @@
             write(41,*)      '-------------------------------------------------------------------'
 
 453         write(41,503) ' |',alf(m1,1),'|',alf(m1,2),'|',alf(m1,3),'|',alf(m1,4),'|',alf(m1,5),'|',alf(m1,6),'|'
+            do z = 1, 6
+              call append(biasTable, alf(m1,z));
+            end do
 503         format(a2,6(e10.3,a1))
             m1=m1+1
             if(m1.le.(n-1)) goto 453
@@ -584,9 +651,6 @@
 67          if (ii .gt. 0) then
               xxx(i)=k1*r+r+(r+w(m2,ii))*sin(fi-u(m2,ii)/r)-kzd*xzd
               yyy(i)=-(r+w(m2,ii))*cos(fi-u(m2,ii)/r)+yzd
-            else
-              xxx(i) = 0
-              yyy(i) = 0
             end if
             write(17,*) xxx(i),yyy(i)
             fi=fi+10./aa
@@ -602,7 +666,6 @@
             if(m1.le.n) goto 57
             close(unit=17)
             
-            write(*,*) 'Finished all calculations, deallocating dynamic stuff...'
             write(*,*) 'Done!'
             return
       end
