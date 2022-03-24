@@ -34,5 +34,6 @@
 	"YRANGE" : "Y values",
 	"ZO_TEXT" : "Zo curve point list",
 	"DZO_TEXT" : "dZo curve point list",
-	"SAVE_TEXT" : "Save report"
+	"SAVE_TEXT" : "Save report",
+	"SAVED_TO" : "Saved to"
 }

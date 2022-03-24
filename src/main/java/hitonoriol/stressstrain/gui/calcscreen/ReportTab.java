@@ -1,11 +1,13 @@
 package hitonoriol.stressstrain.gui.calcscreen;
 
+import java.io.File;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
 
+import hitonoriol.stressstrain.Analyzer;
 import hitonoriol.stressstrain.analyzer.StressStrainAnalyzer;
 import hitonoriol.stressstrain.gui.calcscreen.MainScreenController.PlateDescriptor;
 import hitonoriol.stressstrain.resources.Locale;
@@ -30,6 +32,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.FontSmoothingType;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.FileChooser;
 
 class ReportTab extends Tab {
 	private VBox contents = new VBox();
@@ -43,7 +46,7 @@ class ReportTab extends Tab {
 	private StressStrainAnalyzer analyzer;
 	private PlateDescriptor plateDescriptor;
 
-	private Button saveReportBtn = new Button(Locale.get("SAVE_TEXT"));
+	private Button saveReportBtn = new Button();
 
 	ReportTab(PlateDescriptor input, StressStrainAnalyzer analyzer) {
 		this.analyzer = analyzer;
@@ -61,7 +64,21 @@ class ReportTab extends Tab {
 		});
 		setContent(scroll);
 
-		saveReportBtn.setOnAction(event -> new Report(plateDescriptor).save(getText() + ".json"));
+		saveReportBtn.setOnAction(event -> {
+			Report report = new Report(plateDescriptor);
+			FileChooser chooser = Resources.createFileChooser();
+			chooser.setInitialFileName(getText());
+			File reportFile = chooser.showSaveDialog(Analyzer.app().mainStage());
+			if (reportFile != null) {
+				report.save(reportFile);
+				report.checkTab(this);
+			}
+		});
+	}
+
+	void calculateAndRefresh(PlateDescriptor input) {
+		analyzer.calcStressStrainState(input.n, input.q1, input.q2, input.kpi, input.usl1, input.usl2);
+		refreshContents(input);
 	}
 
 	void refreshContents(PlateDescriptor input) {
@@ -73,7 +90,6 @@ class ReportTab extends Tab {
 		contents.getChildren().clear();
 		createPlot();
 
-		/* Just for testing / TODO: Load this data from library and format it properly */
 		// addTextEntry(Locale.get("CHAR"),
 		// Resources.readExternal("stress-strain.dat"));
 		addEntry(Locale.get("CHAR"),
@@ -93,6 +109,8 @@ class ReportTab extends Tab {
 		addTextEntry(Locale.get("DZO_TEXT"),
 				Locale.localize(dzoRange.toString()), Resources.readExternal("dzo")).setExpanded(false);
 		saveReportBtn.setMaxWidth(Double.MAX_VALUE);
+		saveReportBtn.setText(Locale.get("SAVE_TEXT"));
+		saveReportBtn.setDisable(false);
 		VBox btnBox = new VBox(saveReportBtn);
 		btnBox.setAlignment(Pos.CENTER);
 		contents.getChildren().add(btnBox);
@@ -185,6 +203,10 @@ class ReportTab extends Tab {
 
 	PlateDescriptor getPlateDescriptor() {
 		return plateDescriptor;
+	}
+
+	Button getSaveReportBtn() {
+		return saveReportBtn;
 	}
 
 	private static class Range {

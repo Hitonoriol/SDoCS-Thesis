@@ -1,8 +1,11 @@
 package hitonoriol.stressstrain.gui.calcscreen;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,11 +13,14 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
+import hitonoriol.stressstrain.Analyzer;
 import hitonoriol.stressstrain.Util;
 import hitonoriol.stressstrain.analyzer.StressStrainAnalyzer;
 import hitonoriol.stressstrain.gui.DoubleFormatter;
 import hitonoriol.stressstrain.gui.DoubleFormatter.Format;
 import hitonoriol.stressstrain.resources.Locale;
+import hitonoriol.stressstrain.resources.Resources;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -33,6 +39,7 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TitledPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 public class MainScreenController implements Initializable {
 	private StressStrainAnalyzer analyzer = new StressStrainAnalyzer();
@@ -70,6 +77,10 @@ public class MainScreenController implements Initializable {
 
 	@FXML
 	private Label nLabel, qLabel, kpiLabel, uslLabel;
+
+	private final FileChooser fileChooser = Resources.createFileChooser();
+
+	private ExecutorService calculationExecutor = Executors.newFixedThreadPool(1);
 
 	public MainScreenController() {
 		Util.out("Created a new %s", this);
@@ -118,12 +129,20 @@ public class MainScreenController implements Initializable {
 		resultPane.getSelectionModel().selectedItemProperty()
 				.addListener((observable, oldTab, newTab) -> {
 					if (newTab == addTab) {
-						tabs.add(resultPane.getTabs().size() - 1, newTab());
-						resultPane.getSelectionModel().select(tabs.size() - 2);
+						addTab(newTab());
 					} else
 						restoreInputs(((ReportTab) newTab).getPlateDescriptor());
 				});
 		tabs.add(addTab);
+	}
+
+	void addTab(ReportTab tab) {
+		resultPane.getTabs().add(resultPane.getTabs().size() - 1, tab);
+		selectTab(tab);
+	}
+
+	void selectTab(ReportTab tab) {
+		resultPane.getSelectionModel().select(tab);
 	}
 
 	private void setDecimalFormat(Format format) {
@@ -145,23 +164,36 @@ public class MainScreenController implements Initializable {
 	/* Called when `calcBtn` is pressed */
 	@FXML
 	private void calculate(ActionEvent event) {
-		analyzer.calcStressStrainState(nField.getValue(),
-				q1Field.getValue().floatValue(), q2Field.getValue().floatValue(),
-				kpiField.getValue().floatValue(),
-				usl1Check.isSelected(), usl2Check.isSelected());
+		calcBtn.setDisable(true);
+		calculationExecutor.execute(() -> {
+			analyzer.calcStressStrainState(nField.getValue(),
+					q1Field.getValue().floatValue(), q2Field.getValue().floatValue(),
+					kpiField.getValue().floatValue(),
+					usl1Check.isSelected(), usl2Check.isSelected());
+			Platform.runLater(() -> {
+				ObservableList<Tab> tabs = resultPane.getTabs();
+				ReportTab tab;
+				if (tabs.isEmpty())
+					tabs.add(tab = newTab());
+				else
+					tab = (ReportTab) resultPane.getSelectionModel().getSelectedItem();
 
-		ObservableList<Tab> tabs = resultPane.getTabs();
-		ReportTab tab;
-		if (tabs.isEmpty())
-			tabs.add(tab = newTab());
-		else
-			tab = (ReportTab) resultPane.getSelectionModel().getSelectedItem();
-
-		tab.refreshContents(new PlateDescriptor(this));
+				tab.refreshContents(new PlateDescriptor(Analyzer.app().mainController()));
+				calcBtn.setDisable(false);
+			});
+		});
 	}
 
 	private void calculate() {
 		calculate(null);
+	}
+
+	@FXML
+	private void openReport(ActionEvent event) {
+		File report = fileChooser.showOpenDialog(Analyzer.app().mainStage());
+		if (report != null) {
+			Report.restore(this, report);
+		}
 	}
 
 	/* 
@@ -181,7 +213,7 @@ public class MainScreenController implements Initializable {
 	ReportTab newTab() {
 		ReportTab tab = new ReportTab(new PlateDescriptor(this), analyzer);
 		ObservableList<Tab> tabs = resultPane.getTabs();
-		tab.setText(Locale.get("REPORT") + " " + tabs.size());
+		tab.setText(Locale.get("REPORT") + " " + tabs.size() + " (" + Util.timestamp() + ")");
 		return tab;
 	}
 
@@ -194,12 +226,32 @@ public class MainScreenController implements Initializable {
 		usl1Check.setSelected(inputs.usl2);
 	}
 
+	StressStrainAnalyzer getAnalyzer() {
+		return analyzer;
+	}
+
+	FileChooser fileChooser() {
+		return fileChooser;
+	}
+	
+	public ExecutorService getCalculationExecutor() {
+		return calculationExecutor;
+	}
+
+	@FXML
+	private void quit(ActionEvent event) {
+		Platform.exit();
+	}
+
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY)
 	static class PlateDescriptor {
 		int n;
 		float q1, q2;
 		float kpi;
 		boolean usl1, usl2;
+
+		public PlateDescriptor() {
+		}
 
 		public PlateDescriptor(MainScreenController controller) {
 			n = controller.nField.getValue();

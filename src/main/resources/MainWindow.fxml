@@ -23,9 +23,9 @@
       <menus>
         <Menu mnemonicParsing="false" text="{FILE}">
           <items>
-            <MenuItem mnemonicParsing="false" text="{OPEN_REPORT}" />
+            <MenuItem mnemonicParsing="false" onAction="#openReport" text="{OPEN_REPORT}" />
             <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="{QUIT}" />
+            <MenuItem mnemonicParsing="false" onAction="#quit" text="{QUIT}" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="{HELP}">

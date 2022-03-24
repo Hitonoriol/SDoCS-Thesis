@@ -22,3 +22,4 @@ bin
 *.cfg
 core-lib/ss-initial-unsafe
 *.so
+reports

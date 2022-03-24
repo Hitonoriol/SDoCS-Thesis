@@ -14,9 +14,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
+import hitonoriol.stressstrain.gui.calcscreen.Report;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 public class Resources {
 	public final static String MAIN_SCREEN = "/MainWindow.fxml";
@@ -42,7 +45,18 @@ public class Resources {
 	public final static Font FNT_MONOSPACE = Font
 			.loadFont(Resources.class.getResource("/RobotoMono.ttf").toExternalForm(), 14);
 
-	private Resources() {}
+	private Resources() {
+	}
+
+	private final static ExtensionFilter reportExtFilter = new ExtensionFilter(
+			"Stress strain analysis reports", "*" + Report.fileExtension);
+
+	public static FileChooser createFileChooser() {
+		FileChooser chooser = new FileChooser();
+		chooser.setInitialDirectory(reportDir);
+		chooser.getExtensionFilters().add(reportExtFilter);
+		return chooser;
+	}
 
 	public static MapType getMapType(Class<?> key, Class<?> value) {
 		return typeFactory.constructMapType(HashMap.class, key, value);
@@ -67,8 +81,12 @@ public class Resources {
 	}
 
 	public static <T> boolean serialize(String path, T obj) {
+		return serialize(new File(path), obj);
+	}
+
+	public static <T> boolean serialize(File file, T obj) {
 		try {
-			mapper.writeValue(new File(path), obj);
+			mapper.writeValue(file, obj);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -76,13 +94,17 @@ public class Resources {
 		}
 	}
 
-	public static <T> T deserialize(String path, Class<T> clazz) {
+	public static <T> T deserialize(File file, Class<T> clazz) {
 		try {
-			return mapper.readerFor(clazz).readValue(new File(path));
+			return mapper.readerFor(clazz).readValue(file);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static <T> T deserialize(String path, Class<T> clazz) {
+		return deserialize(new File(path), clazz);
 	}
 
 	public static String readExternal(String path) {

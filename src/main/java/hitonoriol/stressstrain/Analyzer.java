@@ -12,7 +12,7 @@ import javafx.stage.Stage;
 public class Analyzer extends Application {
 	private static Analyzer application;
 
-	private Stage primaryStage;
+	private Stage mainStage;
 	private MainScreenController mainController;
 
 	public Analyzer() {
@@ -20,22 +20,32 @@ public class Analyzer extends Application {
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
-		this.primaryStage = primaryStage;
+	public void start(Stage mainStage) throws Exception {
+		this.mainStage = mainStage;
 		FXMLLoader primaryLoader = Resources.newFXMLLoader();
 		Scene scene = new Scene(Locale.loadFXML(Resources.MAIN_SCREEN));
 		mainController = primaryLoader.getController();
 		loadMainScreen(scene);
 
-		primaryStage.setTitle("Stress Strain State Analyzer");
-		primaryStage.show();
-		primaryStage.setMinWidth(primaryStage.getWidth());
-		primaryStage.setMinHeight(primaryStage.getHeight());
+		mainStage.setTitle("Stress Strain State Analyzer");
+		mainStage.show();
+		mainStage.setMinWidth(mainStage.getWidth());
+		mainStage.setMinHeight(mainStage.getHeight());
+	}
+
+	@Override
+	public void stop() throws Exception {
+		mainController.getCalculationExecutor().shutdown();
+		super.stop();
 	}
 
 	public void loadMainScreen(Scene scene) {
 		Resources.loadStyles(scene);
-		primaryStage.setScene(scene);
+		mainStage.setScene(scene);
+	}
+
+	public Stage mainStage() {
+		return mainStage;
 	}
 
 	public MainScreenController mainController() {
