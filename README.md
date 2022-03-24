@@ -1,6 +1,10 @@
 # Static Deformations of Composite Shells  
 
-### Stress strain analysis of a rectangular plate with cylindrical corrugations  
+### Stress strain state analyzer of a rectangular plate with cylindrical corrugations  
+
+### Demonstration  
+
+![screenshot](https://raw.githubusercontent.com/Hitonoriol/SDoCS-Thesis/master/screenshots/screenshot1.png)
 
 ---
 
