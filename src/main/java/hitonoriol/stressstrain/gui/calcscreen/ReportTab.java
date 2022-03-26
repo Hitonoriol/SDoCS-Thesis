@@ -65,7 +65,7 @@ class ReportTab extends Tab {
 		setContent(scroll);
 
 		saveReportBtn.setOnAction(event -> {
-			Report report = new Report(plateDescriptor);
+			Report report = new Report(analyzer, plateDescriptor);
 			FileChooser chooser = Resources.createFileChooser();
 			chooser.setInitialFileName(getText());
 			File reportFile = chooser.showSaveDialog(Analyzer.app().mainStage());
@@ -95,13 +95,13 @@ class ReportTab extends Tab {
 		addEntry(Locale.get("CHAR"),
 				new FloatTable(
 						analyzer.getStressStrainTable(),
-						"x", "U(x)", "W(x)", "W^(X)", "N(x)", "M(x)", "Q(x)"));
+						StressStrainAnalyzer.OUT_TABLE_HEADER));
 		// addTextEntry(Locale.get("BIAS"),
 		// Resources.readExternal("stress-strain.bias"));
 		addEntry(Locale.get("BIAS"),
 				new FloatTable(
 						analyzer.getCouplingErrorTable(),
-						"U - U", "W - W", "W^ - W^", "N - N", "M - M", "Q - Q"));
+						StressStrainAnalyzer.BIAS_TABLE_HEADER));
 
 		addPlot();
 		addTextEntry(Locale.get("ZO_TEXT"),

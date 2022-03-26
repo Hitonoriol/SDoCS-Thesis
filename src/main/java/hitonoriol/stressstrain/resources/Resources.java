@@ -116,11 +116,13 @@ public class Resources {
 		}
 	}
 
-	public static void save(String file, Object object) {
+	public static boolean write(String path, String contents) {
 		try {
-			mapper.writeValue(new File(file), object);
+			Files.write(Paths.get(path), contents.getBytes());
+			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}
 	}
 

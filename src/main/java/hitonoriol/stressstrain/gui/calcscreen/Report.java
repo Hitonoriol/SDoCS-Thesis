@@ -6,9 +6,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import hitonoriol.stressstrain.Util;
+import hitonoriol.stressstrain.analyzer.StressStrainAnalyzer;
 import hitonoriol.stressstrain.gui.calcscreen.MainScreenController.PlateDescriptor;
 import hitonoriol.stressstrain.resources.Locale;
 import hitonoriol.stressstrain.resources.Resources;
+import hitonoriol.stressstrain.util.Table;
 import javafx.scene.control.Button;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
@@ -17,14 +20,19 @@ public class Report {
 	private String name;
 	@JsonIgnore
 	private File path;
+	@JsonIgnore
+	StressStrainAnalyzer analyzer;
 	private PlateDescriptor plateParameters;
 
 	public final static String fileExtension = ".ssr";
-	
-	public Report() {}
-	
-	public Report(PlateDescriptor plateParameters) {
+	public final static String outTableName = "characteristics.txt", biasTableName = "coupling-errors.txt";
+
+	public Report() {
+	}
+
+	public Report(StressStrainAnalyzer analyzer, PlateDescriptor plateParameters) {
 		this.plateParameters = plateParameters;
+		this.analyzer = analyzer;
 	}
 
 	public ReportTab restore(MainScreenController mainScreen) {
@@ -37,23 +45,44 @@ public class Report {
 	}
 
 	public boolean save(File reportFile) {
+		File reportParent = reportFile.getParentFile();
+		String reportName = reportFile.getName(), reportNoExt = Util.removeFileExtension(reportName);
+		
+		Util.out("parent: [%s] name: [%s] noExt: [%s]", reportParent, reportName, reportNoExt);
+		
+		/* Create a new directory named the same as the report before saving */
+		if (!reportParent.getName().equals(reportNoExt)) {
+			String newDir = reportParent.getAbsolutePath() + "/" + reportNoExt;
+			new File(newDir).mkdirs();
+			reportFile = new File(newDir + "/" + reportName);
+		}
+		
 		if (Resources.serialize(reportFile, this)) {
 			this.path = reportFile;
+			saveTables();
 			return true;
 		}
 		return false;
 	}
-	
+
+	private void saveTables() {
+		Table outTable = new Table(analyzer.getStressStrainTable(), StressStrainAnalyzer.OUT_TABLE_HEADER);
+		Table biasTable = new Table(analyzer.getCouplingErrorTable(), StressStrainAnalyzer.BIAS_TABLE_HEADER);
+		String prefix = path.getParent() + "/";
+		Resources.write(prefix + outTableName, outTable.render());
+		Resources.write(prefix + biasTableName, biasTable.render());
+	}
+
 	@JsonIgnore
 	public boolean isSaved() {
 		return path != null && path.exists();
 	}
-	
+
 	@JsonIgnore
 	public File getPath() {
 		return path;
 	}
-	
+
 	void checkTab(ReportTab tab) {
 		if (isSaved()) {
 			Button saveBtn = tab.getSaveReportBtn();

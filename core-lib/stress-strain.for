@@ -25,8 +25,10 @@
 #define LIST_GETTER(var, bind_as) \
       function get_/**/var() bind(C, name = bind_as); \
             type(C_PTR) :: get_/**/var; \
-            allocate(var/**/_data(var%n)); \
-            call move_alloc(var%data, var/**/_data); \
+            if (.not. allocated(var/**/_data)) then; \
+              allocate(var/**/_data(var%n)); \
+              call move_alloc(var%data, var/**/_data); \
+            endif; \
             get_/**/var = c_loc(var/**/_data); \
       end function; \
       function var/**/Size() bind(C, name = STR(var/**/Size)); \

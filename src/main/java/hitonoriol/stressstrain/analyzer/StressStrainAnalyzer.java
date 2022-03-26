@@ -22,6 +22,9 @@ public class StressStrainAnalyzer {
 
 	private float zx[], zy[], dzx[], dzy[];
 
+	public final static String[] OUT_TABLE_HEADER = { "x", "U(x)", "W(x)", "W^(X)", "N(x)", "M(x)", "Q(x)" };
+	public final static String[] BIAS_TABLE_HEADER = { "U - U", "W - W", "W^ - W^", "N - N", "M - M", "Q - Q" };
+
 	public Array2d getStressStrainTable() {
 		return getTable(library.getOutTablePtr(), library.outTableSize(), library.outTableWidth());
 	}
