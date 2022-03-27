@@ -22,12 +22,17 @@
 	"SCIENTIFIC_NOT" : "Use scientific notation for input parameters",
 	"Q_STEP" : "Value change step for fields q1 and q2",
 	
+	"PARAM_NAME" : "Parameter",
+	"PARAM_DESC" : "Description",
+	"PARAM_VALUE" : "Value",
+	
 	"REPORT" : "Report",
 	"CHAR" : "Stress-strain state characteristics of the structure",
 	"BIAS" : "Coupling errors",
 	"PLOT" : "Transverse section of the plate before (Zo) and after (dZo) the deformation",
 	"ZOOM_ZO" : "Zoom in on Zo",
 	"ZOOM_DZO" : "Zoom in on dZo",
+	"POINTS" : "points",
 	"XRANGE" : "X values in range",
 	"FROM" : "from",
 	"TO" : "to",

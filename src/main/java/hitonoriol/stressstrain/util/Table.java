@@ -3,9 +3,11 @@ package hitonoriol.stressstrain.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.vandermeer.asciitable.AT_Row;
 import de.vandermeer.asciitable.AsciiTable;
 import de.vandermeer.asciithemes.TA_Grid;
 import de.vandermeer.asciithemes.TA_GridConfig;
+import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 
 /* Allows to form AsciiTable rows cell by cell instead of adding the whole row at once */
 public class Table extends AsciiTable {
@@ -13,7 +15,8 @@ public class Table extends AsciiTable {
 			.addCharacterMap(TA_GridConfig.RULESET_NORMAL, '*', '-', '|', '+', '+', '+', '+', '+', '+', '+', '+', '+')
 			.addCharacterMap(TA_GridConfig.RULESET_HEAVY, '*', '=', '|', '+', '+', '+', '+', '+', '+', '+', '+', '+');
 
-	private List<Object> currentRow;
+	private List<String> currentRow;
+	private int maxCellWidth = 0;
 
 	public Table() {
 		row(false);
@@ -25,14 +28,20 @@ public class Table extends AsciiTable {
 		addHeavyRule();
 		for (String colName : colNames)
 			add(colName);
-		row(false);
+		row(false).setTextAlignment(TextAlignment.CENTER);
 		addHeavyRule();
 		populate(contents);
 	}
 
 	/* Add cell to the current row */
 	public Table add(Object obj) {
-		currentRow.add(obj);
+		if (obj == null) {
+			currentRow.add(null);
+			return this;
+		}
+		String str = obj.toString();
+		currentRow.add(str);
+		maxCellWidth = Math.max(maxCellWidth, str.length());
 		return this;
 	}
 
@@ -45,19 +54,20 @@ public class Table extends AsciiTable {
 	}
 
 	/* Begin a new row */
-	public Table row(boolean addRule) {
+	public AT_Row row(boolean addRule) {
+		AT_Row row = null;
 		if (currentRow != null) {
 			expand();
-			super.addRow(currentRow);
-			super.ctx.setWidth((super.ctx.getTextWidth() + currentRow.size() + 1));
+			row = super.addRow(currentRow);
+			super.ctx.setWidth(maxCellWidth * currentRow.size() + currentRow.size() + 2);
 		}
 		if (addRule)
 			addRule();
 		currentRow = new ArrayList<>();
-		return this;
+		return row;
 	}
-	
-	public Table row() {
+
+	public AT_Row row() {
 		return row(true);
 	}
 
@@ -69,5 +79,27 @@ public class Table extends AsciiTable {
 			}
 			row();
 		}
+	}
+
+	public void setWidth(int width) {
+		ctx.setWidth(width);
+	}
+	
+	public int getWidth() {
+		return ctx.getWidth();
+	}
+
+	public static String frame(String str, int width) {
+		Table tbl = new Table();
+		tbl.addHeavyRule();
+		tbl.add(str).row(false).setTextAlignment(TextAlignment.CENTER);
+		tbl.addHeavyRule();
+		if (width > 0)
+			tbl.setWidth(width);
+		return tbl.render();
+	}
+	
+	public static String frame(String str) {
+		return frame(str, 0);
 	}
 }

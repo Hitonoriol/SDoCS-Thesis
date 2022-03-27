@@ -2,7 +2,6 @@ package hitonoriol.stressstrain.resources;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,8 +14,6 @@ import javafx.scene.Scene;
 
 public class Locale {
 	private final static Locale instance = new Locale();
-	private final static Charset UTF8 = Charset.forName("utf8");
-
 	private final static String PREFIX = "{", SUFFIX = "}";
 	private Map<String, String> locMap = new HashMap<>();
 	private StringSubstitutor substitutor = new StringSubstitutor(locMap, PREFIX, SUFFIX);
@@ -44,7 +41,7 @@ public class Locale {
 	public static String readFile(String file) {
 		String src;
 		try {
-			src = new String(instance.getClass().getResourceAsStream(file).readAllBytes(), UTF8);
+			src = new String(instance.getClass().getResourceAsStream(file).readAllBytes(), Resources.UTF8);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -61,7 +58,7 @@ public class Locale {
 				loader.setController(controller);
 				fxml = Resources.removeFXMLController(fxml);
 			}
-			return loader.load(new ByteArrayInputStream(fxml.getBytes(UTF8)));
+			return loader.load(new ByteArrayInputStream(fxml.getBytes(Resources.UTF8)));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;

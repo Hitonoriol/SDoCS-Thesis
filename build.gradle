@@ -26,10 +26,10 @@ dependencies {
 
 javafx {
     version = "17.0.1"
-    modules = [ 'javafx.controls', 'javafx.fxml' ]
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing' ]
 }
 
-version = '0.1.1'
+version = '0.1.2'
 mainClassName = 'hitonoriol.stressstrain.Main'
 
 java {

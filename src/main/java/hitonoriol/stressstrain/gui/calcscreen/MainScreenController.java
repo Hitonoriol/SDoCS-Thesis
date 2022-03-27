@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
+import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 import hitonoriol.stressstrain.Analyzer;
 import hitonoriol.stressstrain.Util;
 import hitonoriol.stressstrain.analyzer.StressStrainAnalyzer;
@@ -20,6 +21,7 @@ import hitonoriol.stressstrain.gui.DoubleFormatter;
 import hitonoriol.stressstrain.gui.DoubleFormatter.Format;
 import hitonoriol.stressstrain.resources.Locale;
 import hitonoriol.stressstrain.resources.Resources;
+import hitonoriol.stressstrain.util.Table;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -233,9 +235,13 @@ public class MainScreenController implements Initializable {
 	FileChooser fileChooser() {
 		return fileChooser;
 	}
-	
+
 	public ExecutorService getCalculationExecutor() {
 		return calculationExecutor;
+	}
+
+	public ReportTab getCurrentTab() {
+		return (ReportTab) resultPane.getSelectionModel().getSelectedItem();
 	}
 
 	@FXML
@@ -260,6 +266,26 @@ public class MainScreenController implements Initializable {
 			kpi = controller.kpiField.getValue().floatValue();
 			usl1 = controller.usl1Check.isSelected();
 			usl2 = controller.usl2Check.isSelected();
+		}
+
+		@Override
+		public String toString() {
+			Table descTable = new Table();
+			descTable.addRule();
+			descTable.add("").add(Locale.get("INPUT_TITLE")).add("").row().setTextAlignment(TextAlignment.CENTER);
+			descTable.add(Locale.get("PARAM_DESC"))
+					.add(Locale.get("PARAM_NAME"))
+					.add(Locale.get("PARAM_VALUE"))
+					.row(false);
+			descTable.addHeavyRule();
+			descTable.add(Locale.get("N_DESC")).add("n").add(n).row();
+			descTable.add(Locale.get("Q_DESC")).add("q1").add(q1).row();
+			descTable.add(Locale.get("")).add("q2").add(q2).row();
+			descTable.add(Locale.get("KPI_DESC")).add("kpi").add(kpi).row();
+			descTable.add(Locale.get("USL1_DESC")).add("usl1").add(usl1).row();
+			descTable.add(Locale.get("USL2_DESC")).add("usl2").add(usl2).row();
+			descTable.setWidth(85);
+			return descTable.render();
 		}
 	}
 }

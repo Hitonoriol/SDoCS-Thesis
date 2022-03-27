@@ -1,6 +1,7 @@
 package hitonoriol.stressstrain.resources;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -44,6 +45,8 @@ public class Resources {
 
 	public final static Font FNT_MONOSPACE = Font
 			.loadFont(Resources.class.getResource("/RobotoMono.ttf").toExternalForm(), 14);
+
+	public final static Charset UTF8 = Charset.forName("utf8");
 
 	private Resources() {
 	}
@@ -118,7 +121,7 @@ public class Resources {
 
 	public static boolean write(String path, String contents) {
 		try {
-			Files.write(Paths.get(path), contents.getBytes());
+			Files.write(Paths.get(path), contents.getBytes(UTF8));
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

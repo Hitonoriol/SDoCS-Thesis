@@ -209,19 +209,37 @@ class ReportTab extends Tab {
 		return saveReportBtn;
 	}
 
-	private static class Range {
+	LineChart<Number, Number> getPlot() {
+		return plot;
+	}
+
+	Range getZORange() {
+		return zoRange;
+	}
+	
+	Range getDZORange() {
+		return dzoRange;
+	}
+	
+	static class Range {
+		private int n = 0;
 		private Pair min = new Pair(Float.MAX_VALUE, Float.MAX_VALUE);
 		private Pair max = new Pair(Float.MIN_VALUE, Float.MIN_VALUE);
 
 		void minMax(float x, float y) {
+			++n;
 			min.setIfLess(x, y);
 			max.setIfGreater(x, y);
 		}
 
+		int getPointCount() {
+			return n;
+		}
+		
 		@Override
 		public String toString() {
-			return String.format("{XRANGE} {FROM} %f {TO} %f / {YRANGE} {FROM} %f {TO} %f%s%5$s",
-					min.x, max.x, min.y, max.x, System.lineSeparator());
+			return String.format("%d {POINTS}, {XRANGE} {FROM} %f {TO} %f / {YRANGE} {FROM} %f {TO} %f",
+					n, min.x, max.x, min.y, max.x);
 		}
 	}
 }
